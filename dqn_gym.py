@@ -83,7 +83,7 @@ if __name__ == '__main__':
     agent = DQN()
 
     # Init env
-    env = gym.make('CartPole-v0')
+    env = gym.make('CartPole-v1')
 
     # Parameters
     epsilon = .99
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
     # Accumulated reward
     score = 0
-    agent.load_model('dqn.h5')
+    #agent.load_model('dqn.h5')
 
     for epoch in range(num_epochs):
         obs = env.reset()
@@ -104,15 +104,16 @@ if __name__ == '__main__':
         prev_obs = obs
         score = 0
 
-        #agent.save_model('dqn.h5')
+        agent.save_model('dqn.h5')
 
         while not done:
+            '''
             env.render()
             action = agent.get_action(obs.reshape(1,obs.size))
             obs, r, done, info = env.step(action)
             score += r
-
             '''
+
             if epoch % 10 == 0:
                 env.render()
 
@@ -137,6 +138,5 @@ if __name__ == '__main__':
 
             if done:
                 agent.update_target_model()
-            '''
 
         print('epoch [', epoch, '] - ', score, ' | e: ', epsilon)
