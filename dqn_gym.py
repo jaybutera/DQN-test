@@ -3,16 +3,18 @@ import numpy as np
 import collections
 import random
 from keras.layers import Dense, LSTM
+from keras.optimizers import Adam
 from keras import layers
 from keras.models import Sequential
 
 class DQN:
     def __init__(self):
-        self.batch_size = 32
+        self.batch_size = 64
         self.memsize = 1000 # experience replay
         self.state_size = 4
         self.action_size = 2
         self.dis_factor = .9
+        self.train_start = 1000
 
         # Store experience replace in a ring buffer
         self.d = collections.deque(maxlen=self.memsize)
@@ -32,6 +34,9 @@ class DQN:
         #return 1 if self.model.predict(obs)[0][0] > .5 else 0
 
     def train_replay (self):
+        #if (len(self.d) < self.train_start):
+            #return
+
         # Sample from replay memory
         batchsize = min(self.batch_size, len(self.d))
         minibatch = random.sample(self.d, batchsize)
@@ -69,11 +74,11 @@ class DQN:
 
     def build_model (self):
         model = Sequential()
-        model.add( Dense(24, input_shape=(self.state_size,), activation='relu') )
-        model.add( Dense(24, activation='relu') )
-        model.add( Dense(self.action_size) )
+        model.add( Dense(32, input_shape=(self.state_size,), activation='relu') )
+        model.add( Dense(48, activation='relu') )
+        model.add( Dense(self.action_size, activation='relu') )
 
-        model.compile(loss='mse', optimizer='adam')
+        model.compile(loss='mse', optimizer=Adam(lr=.001))
         print( model.summary() )
 
         return model
@@ -106,16 +111,18 @@ if __name__ == '__main__':
 
         agent.save_model('dqn.h5')
 
+        iter = 0
         while not done:
+            iter += 1
             '''
             env.render()
             action = agent.get_action(obs.reshape(1,obs.size))
             obs, r, done, info = env.step(action)
             score += r
-            '''
 
             if epoch % 10 == 0:
                 env.render()
+            '''
 
             if np.random.rand() <= epsilon: # Random choice to perform DQN action
                 action = env.action_space.sample()
@@ -130,6 +137,7 @@ if __name__ == '__main__':
             if (epsilon > epsilon_end):
                 epsilon -= epsilon_decay
 
+            #if iter % 2 == 0:
             agent.train_replay()
 
             prev_obs = obs
@@ -139,4 +147,5 @@ if __name__ == '__main__':
             if done:
                 agent.update_target_model()
 
+        score = score if score == 500 else score + 100
         print('epoch [', epoch, '] - ', score, ' | e: ', epsilon)
